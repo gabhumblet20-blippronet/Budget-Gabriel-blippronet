@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Budget Tracker personnel — Banque Pop, Revolut, Edenred">
+<meta name="theme-color" content="#1a1a1a">
+<title>Budget Tracker — Gabriel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:14px;background:#f4f4f2;color:#1a1a1a}
+#app{max-width:860px;margin:0 auto;padding:16px}
+nav{display:flex;gap:3px;background:#e6e6e4;border-radius:10px;padding:4px;margin-bottom:18px}
+nav button{flex:1;border:none;background:transparent;border-radius:7px;padding:7px 2px;font-size:11.5px;font-weight:500;color:#666;cursor:pointer}
+nav button.on{background:#fff;color:#111;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.page{display:none}.page.on{display:block}
+.card{background:#fff;border-radius:12px;border:.5px solid rgba(0,0,0,.09);padding:16px;margin-bottom:14px}
+.ct{font-size:13px;font-weight:600;color:#333;margin-bottom:14px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:#fff;border-radius:10px;border:.5px solid rgba(0,0,0,.09);padding:14px}
+.kl{font-size:11px;color:#999;margin-bottom:4px}
+.kv{font-size:20px;font-weight:600}
+.ks{font-size:11px;color:#bbb;margin-top:3px}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid rgba(0,0,0,.06);font-size:13px}
+.row:last-child{border-bottom:none}
+input,select{padding:8px 11px;border:.5px solid rgba(0,0,0,.15);border-radius:8px;font-size:13px;background:#fff;color:#1a1a1a;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:#4a7fd4}
+.btn{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#111;color:#fff;white-space:nowrap}
+.btn-ok{background:#1a9e6e;color:#fff;border:none;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer}
+.bsm{padding:4px 9px;font-size:11px;border-radius:6px;cursor:pointer;border:.5px solid rgba(0,0,0,.15);background:transparent;color:#555}
+.fg{display:flex;gap:8px}
+.tag{font-size:11px;padding:2px 7px;border-radius:5px;white-space:nowrap}
+.del{background:none;border:none;cursor:pointer;color:#ccc;font-size:15px;padding:0 2px}
+.del:hover{color:#d94040}
+.ab{border-radius:8px;padding:9px 12px;font-size:12px;margin-bottom:8px;border:.5px solid}
+.track{flex:1;height:7px;background:#eee;border-radius:4px;overflow:hidden}
+.ptrack{height:9px;background:#eee;border-radius:5px;overflow:hidden;margin:4px 0 10px}
+.biw{width:85px;padding:5px 8px;font-size:13px;border:.5px solid rgba(0,0,0,.12);border-radius:6px;text-align:right}
+.sl{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sl label{font-size:12px;color:#666;width:145px;flex-shrink:0}
+.sl input{flex:1}
+.sl .sv{font-size:13px;font-weight:600;min-width:65px;text-align:right}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;background:#f8f8f6;border-radius:8px;padding:14px;margin-top:10px}
+.sc{text-align:center}.sy{font-size:11px;color:#aaa;margin-bottom:2px}.sa{font-size:16px;font-weight:600;color:#1a9e6e}
+.msel{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.msel select{padding:7px 10px;font-size:13px;border-radius:8px;border:.5px solid rgba(0,0,0,.15)}
+.htable{width:100%;border-collapse:collapse;font-size:12px}
+.htable th{text-align:left;padding:6px 8px;color:#999;font-weight:500;border-bottom:.5px solid rgba(0,0,0,.08)}
+.htable td{padding:7px 8px;border-bottom:.5px solid rgba(0,0,0,.05)}
+.vir-badge{background:#E6F1FB;color:#185FA5;font-size:11px;padding:2px 7px;border-radius:5px}
+.ep-badge{background:#e8f8f0;color:#1a7a4a;font-size:11px;padding:2px 7px;border-radius:5px}
+.rap-section{border-left:3px solid;padding:10px 14px;border-radius:0 8px 8px 0;margin-bottom:10px;font-size:13px}
+.rap-ok{background:#e8f8f0;border-color:#1a9e6e;color:#1a5f3a}
+.rap-warn{background:#fdf2dc;border-color:#e0a800;color:#7a5000}
+.rap-bad{background:#fde8e8;border-color:#d94040;color:#8a1a1a}
+</style>
+</head>
+<body>
+<div id="app">
+  <nav>
+    <button class="on" onclick="go('dash',this)">Dashboard</button>
+    <button onclick="go('dep',this)">Depenses</button>
+    <button onclick="go('tk',this)">Edenred</button>
+    <button onclick="go('ep',this)">Epargne</button>
+    <button onclick="go('bud',this)">Budget prevu</button>
+    <button onclick="go('hist',this)">Historique</button>
+    <button onclick="go('al',this)">Alertes</button>
+  </nav>
+  <div id="dash" class="page on"></div>
+  <div id="dep" class="page"></div>
+  <div id="tk" class="page"></div>
+  <div id="ep" class="page"></div>
+  <div id="bud" class="page"></div>
+  <div id="hist" class="page"></div>
+  <div id="al" class="page"></div>
+</div>
+<script>
+/* ================================================================
+   CONSTANTES
+================================================================ */
+var CATS=['Alimentation','Transport','Restaurant','Sante','Loisirs','Shopping','Cadeaux','Imprevus','Abonnements','Logement','Telecoms','Assurances'];
+var MOIS_NOMS=['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+
+/* ================================================================
+   HELPERS UI
+================================================================ */
+function f(n){return (+n).toFixed(2).replace('.',',')+' \u20ac';}
+function pc(a,b){return b>0?Math.min(Math.round(a/b*100),100):0;}
+function bcol(p){return p>=100?'#d94040':p>=85?'#e0a800':'#1a9e6e';}
+function kpi(l,v,s,c){return '<div class="kpi"><div class="kl">'+l+'</div><div class="kv" style="color:'+c+'">'+v+'</div><div class="ks">'+s+'</div></div>';}
+function abox(t,msg){
+  var bg=t==='ok'?'#e8f8f0':t==='w'?'#fdf2dc':'#fde8e8';
+  var co=t==='ok'?'#1a7a4a':t==='w'?'#8a5e00':'#a02020';
+  var bc=t==='ok'?'#5bbf8a':t==='w'?'#e0a800':'#d94040';
+  return '<div class="ab" style="background:'+bg+';color:'+co+';border-color:'+bc+'">'+msg+'</div>';
+}
+function tag(app){
+  if(app==='Banque Pop') return '<span class="tag" style="background:#deeefb;color:#1a5f8a">BP</span>';
+  if(app==='Revolut')    return '<span class="tag" style="background:#eceafd;color:#4a3db0">RV</span>';
+  if(app==='Edenred')    return '<span class="tag" style="background:#fdf0d8;color:#8a5e00">ED</span>';
+  if(app==='Epargne')    return '<span class="ep-badge">EP</span>';
+  return '<span class="tag" style="background:#eee;color:#888">'+app+'</span>';
+}
+function bar(v,mx,col){
+  var w=mx>0?Math.min(Math.round(v/mx*100),100):0;
+  return '<div class="track"><div style="height:100%;border-radius:4px;background:'+col+';width:'+w+'%"></div></div>';
+}
+function pbar(p,col){
+  return '<div class="ptrack"><div style="height:100%;border-radius:5px;background:'+col+';width:'+p+'%"></div></div>';
+}
+function ecart(real,prev,goodWhenBelow){
+  var e=real-prev,good=goodWhenBelow?e<=0:e>=0;
+  return '<span style="font-size:12px;min-width:72px;text-align:right;color:'+(good?'#1a9e6e':'#d94040')+'">'+(e>=0?'+':'')+f(e)+'</span>';
+}
+function moisLabelCourt(a,m){return MOIS_NOMS[m-1]+' '+a;}
+function moisLabelLong(a,m){
+  var pm=m-1,pa=a; if(pm<1){pm=12;pa--;}
+  return MOIS_NOMS[m-1]+' '+a+' <span style="font-size:11px;color:#aaa;font-weight:400">(25 '+MOIS_NOMS[pm-1]+' \u2192 24 '+MOIS_NOMS[m-1]+')</span>';
+}
+
+/* ================================================================
+   ETAT — DONNEES PAR DEFAUT
+================================================================ */
+function newMois(annee,mois){
+  return {
+    annee:annee, mois:mois, cloture:false,
+    revenus:[
+      {id:1,label:'Salaire net',prevu:950,reel:950},
+      {id:2,label:'Prime / Bonus',prevu:120,reel:120},
+      {id:3,label:'Allocations CAF',prevu:304,reel:304},
+      {id:4,label:'Autres revenus',prevu:150,reel:0}
+    ],
+    budgets:{Alimentation:290,Transport:80,Restaurant:60,Sante:40,Loisirs:50,Shopping:0,Cadeaux:30,Imprevus:120,Abonnements:45,Logement:450,Telecoms:24,Assurances:17},
+    budgetEpargne:150,
+    depenses:[],
+    virements:[],
+    tkCredit:120,
+    epargne:[
+      {label:'Epargne de precaution',cible:50,actuel:0},
+      {label:'Vacances',cible:100,actuel:0},
+      {label:'Livret A',cible:95,actuel:0}
+    ],
+    soldeDepart:{bp:0,rv:0}
+  };
+}
+
+function avril2026(){
+  var m=newMois(2026,4);
+  m.revenus=[
+    {id:1,label:'Salaire net',prevu:950,reel:950},
+    {id:2,label:'Prime / Bonus',prevu:120,reel:120},
+    {id:3,label:'Allocations CAF',prevu:304,reel:304},
+    {id:4,label:'Autres revenus',prevu:150,reel:80}
+  ];
+  m.budgets={Alimentation:290,Transport:80,Restaurant:60,Sante:40,Loisirs:50,Shopping:0,Cadeaux:30,Imprevus:120,Abonnements:45,Logement:450,Telecoms:24,Assurances:17};
+  m.budgetEpargne=150;
+  m.depenses=[
+    {id:1,cat:'Alimentation',desc:'Courses Leclerc',amt:119.62,app:'Revolut'},
+    {id:2,cat:'Alimentation',desc:'Clopes',amt:44.40,app:'Revolut'},
+    {id:3,cat:'Alimentation',desc:'Tickets resto',amt:33.85,app:'Edenred'},
+    {id:4,cat:'Transport',desc:'Carburant',amt:30.20,app:'Revolut'},
+    {id:5,cat:'Transport',desc:'Parking',amt:11.83,app:'Banque Pop'},
+    {id:6,cat:'Restaurant',desc:'Dejeuner',amt:18.61,app:'Revolut'},
+    {id:7,cat:'Restaurant',desc:'Soiree sortie',amt:28.00,app:'Revolut'},
+    {id:8,cat:'Loisirs',desc:'Cinema / Jeux',amt:49.99,app:'Revolut'},
+    {id:9,cat:'Cadeaux',desc:'Cadeaux offerts',amt:35.90,app:'Revolut'},
+    {id:10,cat:'Imprevus',desc:'Depenses imprevues',amt:75.50,app:'Banque Pop'},
+    {id:11,cat:'Logement',desc:'Loyer',amt:304.00,app:'Banque Pop'},
+    {id:12,cat:'Telecoms',desc:'Telephone',amt:1.99,app:'Banque Pop'},
+    {id:13,cat:'Abonnements',desc:'ChatGPT',amt:22.00,app:'Banque Pop'},
+    {id:14,cat:'Epargne',desc:'Epargne de precaution',amt:49.73,app:'Epargne',epIdx:0},
+    {id:15,cat:'Epargne',desc:'Vacances',amt:45.00,app:'Epargne',epIdx:1},
+    {id:16,cat:'Epargne',desc:'Livret A',amt:95.00,app:'Epargne',epIdx:2}
+  ];
+  m.virements=[{id:1,desc:'Virement mensuel Revolut',montant:380,de:'Banque Pop',vers:'Revolut'}];
+  m.tkCredit=120;
+  m.epargne=[
+    {label:'Epargne de precaution',cible:50,actuel:49.73},
+    {label:'Vacances',cible:100,actuel:45.00},
+    {label:'Livret A',cible:95,actuel:95.00}
+  ];
+  m.soldeDepart={bp:-2.21,rv:3.37};
+  return m;
+}
+
+function defState(){
+  return {
+    nid:100, curAnnee:2026, curMois:4,
+    mois:{'2026-4':avril2026()},
+    prelevements:[
+      {id:1,label:'Loyer',montant:450,jour:5,app:'Banque Pop'},
+      {id:2,label:'Electricite / Gaz',montant:75.96,jour:5,app:'Banque Pop'},
+      {id:3,label:'Internet Box',montant:23.99,jour:10,app:'Banque Pop'},
+      {id:4,label:'Assurance habitation',montant:17.49,jour:8,app:'Banque Pop'},
+      {id:5,label:'ChatGPT',montant:22.00,jour:15,app:'Banque Pop'},
+      {id:6,label:'Salle de sport',montant:50.00,jour:1,app:'Revolut'}
+    ],
+    alerteJours:7
+  };
+}
+
+var G;
+try{ G=JSON.parse(localStorage.getItem('bg9')||'{}'); if(!G.mois) G=defState(); }
+catch(e){ G=defState(); }
+function save(){ try{localStorage.setItem('bg9',JSON.stringify(G));}catch(e){} }
+function M(){ return G.mois[G.curAnnee+'-'+G.curMois]; }
+
+/* ================================================================
+   FONCTIONS CALCULEES (toutes definies ici, dans l'ordre)
+================================================================ */
+function sumIf(deps,fn){ var t=0; deps.forEach(function(d){if(fn(d))t+=d.amt;}); return t; }
+function appR(m,a){ return sumIf(m.depenses,function(d){return d.app===a;}); }
+function virTotal(m){ return (m.virements||[]).reduce(function(a,v){return a+v.montant;},0); }
+
+// revenus
+function revR(m){ return m.revenus.reduce(function(a,r){return a+r.reel;},0); }
+function revP(m){ return m.revenus.reduce(function(a,r){return a+r.prevu;},0); }
+// revenus hors Prime/Bonus (Edenred ne passe pas par BP)
+function revRBP(m){ return m.revenus.reduce(function(a,r){return r.label==='Prime / Bonus'?a:a+r.reel;},0); }
+function revPBP(m){ return m.revenus.reduce(function(a,r){return r.label==='Prime / Bonus'?a:a+r.prevu;},0); }
+
+// credit edenred = prime/bonus
+function tkCredit(m){
+  var r=m.revenus.find(function(r){return r.label==='Prime / Bonus';});
+  return r?(r.reel>0?r.reel:r.prevu):(m.tkCredit||120);
+}
+function tkU(m){ return appR(m,'Edenred'); }
+function tkL(m){ return tkCredit(m)-tkU(m); }
+
+// depenses par categorie
+function catR(m,c){ return sumIf(m.depenses,function(d){return d.cat===c&&d.app!=='Edenred'&&d.app!=='Epargne';}); }
+function catRAll(m,c){ return sumIf(m.depenses,function(d){return d.cat===c&&d.app!=='Epargne';}); }
+
+// total depenses qui sortent des comptes (hors Edenred)
+function depR(m){ return sumIf(m.depenses,function(d){return d.app!=='Edenred';}); }
+// total depenses prevues (categories + epargne)
+function depP(m){ return CATS.reduce(function(a,c){return a+(m.budgets[c]||0);},0)+(m.budgetEpargne||0); }
+
+// epargne
+function epTotal(m){ return m.epargne.reduce(function(a,e){return a+e.actuel;},0); }
+function epCible(m){ return m.epargne.reduce(function(a,e){return a+e.cible;},0); }
+
+// soldes
+function soldeBP(m){
+  // BP recoit revenus hors prime/bonus, paie depenses BP, epargne, virements
+  return (m.soldeDepart.bp||0)+revRBP(m)-appR(m,'Banque Pop')-appR(m,'Epargne')-virTotal(m);
+}
+function soldeRV(m){
+  return (m.soldeDepart.rv||0)+virTotal(m)-appR(m,'Revolut');
+}
+function soldeReel(m){ return revRBP(m)-appR(m,'Banque Pop')-appR(m,'Epargne')-appR(m,'Revolut'); }
+function soldePrevu(m){ return revPBP(m)-depP(m); }
+
+// alertes prelevement
+function djUntil(j){
+  var t=new Date();
+  var target=new Date(t.getFullYear(),t.getMonth(),j);
+  if(target<t) target=new Date(t.getFullYear(),t.getMonth()+1,j);
+  var d=Math.round((target-t)/864e5);
+  return d<0?0:d;
+}
+
+/* ================================================================
+   ROUTING
+================================================================ */
+var cur='dash';
+function go(id,btn){
+  document.querySelectorAll('.page').forEach(function(el){el.classList.remove('on');});
+  document.querySelectorAll('nav button').forEach(function(el){el.classList.remove('on');});
+  document.getElementById(id).classList.add('on');
+  btn.classList.add('on');
+  cur=id;
+  ({dash:rDash,dep:rDep,tk:rTk,ep:rEp,bud:rBud,hist:rHist,al:rAl})[id]();
+}
+function refresh(){ save(); ({dash:rDash,dep:rDep,tk:rTk,ep:rEp,bud:rBud,hist:rHist,al:rAl})[cur](); }
+
+function moisSelectorHTML(withNew){
+  var keys=Object.keys(G.mois).sort();
+  var opts='';
+  keys.forEach(function(k){
+    var p=k.split('-');
+    opts+='<option value="'+k+'"'+(+p[0]===G.curAnnee&&+p[1]===G.curMois?' selected':'')+'>'+moisLabelCourt(p[0],p[1])+'</option>';
+  });
+  return '<div class="msel"><select id="msel">'+opts+'</select>'+(M().cloture?'<span style="font-size:11px;background:#f0f0ee;color:#888;padding:3px 8px;border-radius:6px">Cloture</span>':'')+(withNew?'<button class="btn-ok" id="btn-new-mois" style="padding:7px 12px;font-size:12px">+ Nouveau mois</button>':'')+'</div>';
+}
+function bindMsel(withNew){
+  var s=document.getElementById('msel');
+  if(s) s.addEventListener('change',function(){var p=this.value.split('-');G.curAnnee=+p[0];G.curMois=+p[1];refresh();});
+  if(withNew){var b=document.getElementById('btn-new-mois');if(b)b.addEventListener('click',creerNouveauMois);}
+}
+function creerNouveauMois(){
+  var a=G.curAnnee,m=G.curMois+1; if(m>12){m=1;a++;}
+  var k=a+'-'+m;
+  if(G.mois[k]){G.curAnnee=a;G.curMois=m;refresh();return;}
+  var prev=M(), nm=newMois(a,m);
+  nm.budgets=JSON.parse(JSON.stringify(prev.budgets));
+  nm.budgetEpargne=prev.budgetEpargne||150;
+  nm.tkCredit=prev.tkCredit;
+  nm.epargne=JSON.parse(JSON.stringify(prev.epargne));
+  nm.epargne.forEach(function(e){e.actuel=0;});
+  nm.soldeDepart.bp=soldeBP(prev);
+  nm.soldeDepart.rv=soldeRV(prev);
+  nm.revenus=JSON.parse(JSON.stringify(prev.revenus));
+  nm.revenus.forEach(function(r){r.reel=0;});
+  G.mois[k]=nm; prev.cloture=true;
+  G.curAnnee=a; G.curMois=m;
+  refresh();
+}
+
+/* ================================================================
+   DASHBOARD
+================================================================ */
+function rDash(){
+  var m=M();
+  var rrBP=revRBP(m), rpBP=revPBP(m);
+  var rr=revR(m);
+  var dr=depR(m), dp=depP(m);
+  var tl=tkL(m), tc=tkCredit(m);
+  var sbp=soldeBP(m), srv=soldeRV(m), vir=virTotal(m);
+  var epR=epTotal(m), epBudget=m.budgetEpargne||0;
+  var sr=soldeReel(m), sp=soldePrevu(m);
+
+  // alertes
+  var alerts='';
+  CATS.forEach(function(c){
+    var r=catRAll(m,c),b=m.budgets[c]||0; if(!b) return;
+    var p=Math.round(r/b*100);
+    if(p>=100) alerts+=abox('d','Depassement '+c+' : '+f(r)+' / '+f(b)+' prevu');
+    else if(p>=85) alerts+=abox('w',c+' a '+p+'% du budget ('+f(r)+' / '+f(b)+')');
+  });
+  if(epBudget>0&&epR<epBudget) alerts+=abox('w','Epargne : '+f(epR)+' / '+f(epBudget)+' prevu ce mois');
+  if(tl>20) alerts+=abox('w','Edenred : '+f(tl)+' non utilises ce mois');
+  G.prelevements.forEach(function(p){
+    var d=djUntil(p.jour);
+    if(d<=(G.alerteJours||7)) alerts+=abox(d<=2?'d':'w',p.label+' dans '+d+'j \u2014 '+f(p.montant));
+  });
+
+  // barres categories
+  var catBars='';
+  CATS.forEach(function(c){
+    var b=m.budgets[c]||0; if(!b) return;
+    var r=catRAll(m,c),p=pc(r,b);
+    catBars+='<div style="margin-bottom:9px"><div style="display:flex;align-items:center;gap:8px">'+
+      '<span style="font-size:12px;color:#666;width:110px;flex-shrink:0">'+c+'</span>'+
+      bar(r,b,bcol(p))+
+      '<span style="font-size:12px;color:#888;min-width:62px;text-align:right">'+f(r)+'</span></div></div>';
+  });
+  catBars+='<div style="margin-bottom:9px"><div style="display:flex;align-items:center;gap:8px">'+
+    '<span style="font-size:12px;color:#1a7a4a;width:110px;flex-shrink:0">Epargne</span>'+
+    bar(epR,epBudget||1,'#1a9e6e')+
+    '<span style="font-size:12px;color:#888;min-width:62px;text-align:right">'+f(epR)+'</span></div></div>';
+
+  // barres apps
+  var bp=appR(m,'Banque Pop')+appR(m,'Epargne'), rv=appR(m,'Revolut'), tk=tkU(m);
+  var mx=Math.max(bp,rv,tk,1);
+  var appBars='';
+  [{l:'Banque Pop',v:bp,c:'#4a80d4'},{l:'Revolut',v:rv,c:'#7a6dd4'},{l:'Edenred',v:tk,c:'#d4a020'}].forEach(function(a){
+    appBars+='<div style="margin-bottom:9px"><div style="display:flex;align-items:center;gap:8px">'+
+      '<span style="font-size:12px;color:#666;width:110px;flex-shrink:0">'+a.l+'</span>'+
+      bar(a.v,mx,a.c)+
+      '<span style="font-size:12px;color:#888;min-width:62px;text-align:right">'+f(a.v)+'</span></div></div>';
+  });
+
+  // 50/30/20
+  var bC=['Logement','Alimentation','Transport','Sante','Telecoms','Assurances'];
+  var eC=['Restaurant','Loisirs','Shopping','Cadeaux','Imprevus'];
+  var bR=bC.reduce(function(a,c){return a+catRAll(m,c);},0);
+  var eR=eC.reduce(function(a,c){return a+catRAll(m,c);},0);
+  var ruleBars='';
+  [{l:'Besoins (50%)',rule:rrBP*.5,real:bR,c:'#4a80d4'},
+   {l:'Envies (30%)',rule:rrBP*.3,real:eR,c:'#7a6dd4'},
+   {l:'Epargne (20%)',rule:rrBP*.2,real:epR,c:'#1a9e6e'}].forEach(function(r){
+    var p=pc(r.real,r.rule);
+    ruleBars+='<div style="margin-bottom:12px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:3px">'+
+      '<span>'+r.l+'</span><span>Reel : <b>'+f(r.real)+'</b> / Cible : '+f(r.rule)+'</span></div>'+
+      '<div style="height:9px;background:#eee;border-radius:5px;overflow:hidden">'+
+      '<div style="height:100%;width:'+p+'%;background:'+r.c+';border-radius:5px"></div></div></div>';
+  });
+
+  document.getElementById('dash').innerHTML=
+    moisSelectorHTML(true)+
+    '<div style="font-size:13px;font-weight:500;color:#555;margin-bottom:12px">'+moisLabelLong(G.curAnnee,G.curMois)+'</div>'+
+    '<div class="g4">'+
+    kpi('Revenus Banque Pop',f(rrBP),'Hors Prime/Bonus Edenred ('+f(tc)+')\u2003Prevu : '+f(rpBP),'#1a9e6e')+
+    kpi('Depenses reelles',f(dr),'Hors Edenred\u2003Prevu : '+f(dp),'#c48a00')+
+    kpi('Solde Banque Pop',f(sbp),'Solde actuel estime',sbp>=0?'#1a9e6e':'#d94040')+
+    kpi('Solde Revolut',f(srv),'Virements recus : '+f(vir),srv>=0?'#1a9e6e':'#d94040')+
+    '</div>'+
+    '<div class="g3">'+
+    kpi('Edenred restant',f(tl),'Credit : '+f(tc)+' (= Prime/Bonus)',tl>30?'#1a9e6e':tl>10?'#c48a00':'#d94040')+
+    kpi('Epargne du mois',f(epR),'Objectif : '+f(epBudget),epR>=epBudget&&epBudget>0?'#1a9e6e':epR>0?'#c48a00':'#999')+
+    kpi('Solde reel du mois',f(sr),'Prevu : '+f(sp),sr>=0?'#1a9e6e':'#d94040')+
+    '</div>'+
+    (alerts||'')+
+    '<div class="g2">'+
+    '<div class="card"><div class="ct">Par categorie</div>'+catBars+'</div>'+
+    '<div class="card"><div class="ct">Par application</div>'+appBars+'</div>'+
+    '</div>'+
+    '<div class="card"><div class="ct">Regle 50/30/20 \u2014 base revenus BP : '+f(rrBP)+'</div>'+ruleBars+'</div>';
+  bindMsel(true);
+}
+
+/* ================================================================
+   DEPENSES
+================================================================ */
+function rDep(){
+  var m=M();
+  var opts=''; CATS.forEach(function(c){opts+='<option value="'+c+'">'+c+'</option>';});
+  opts+='<option value="Epargne">Epargne</option>';
+  var rows='';
+  var list=m.depenses.slice().reverse();
+  if(!list.length) rows='<div style="color:#bbb;text-align:center;padding:14px">Aucune depense</div>';
+  list.forEach(function(d){
+    rows+='<div class="row">'+
+      '<span style="flex:1;color:#444">'+d.cat+'</span>'+
+      '<span style="flex:2;color:#888;font-size:12px">'+d.desc+'</span>'+
+      tag(d.app)+
+      '<span style="font-weight:600;min-width:70px;text-align:right">'+f(d.amt)+'</span>'+
+      '<button class="del" data-id="'+d.id+'">&#10005;</button></div>';
+  });
+  var virRows='';
+  (m.virements||[]).forEach(function(v){
+    virRows+='<div class="row"><span style="flex:1;color:#444">'+v.desc+'</span><span class="vir-badge">BP \u2192 RV</span><span style="font-weight:600;min-width:70px;text-align:right">'+f(v.montant)+'</span><button class="del" data-vid="'+v.id+'">&#10005;</button></div>';
+  });
+  if(!virRows) virRows='<div style="color:#bbb;font-size:13px;padding:8px 0">Aucun virement ce mois</div>';
+
+  document.getElementById('dep').innerHTML=
+    moisSelectorHTML(false)+
+    '<div class="card"><div class="ct">Ajouter une depense</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<div class="fg"><select id="dc" style="flex:1"><option value="">-- Categorie --</option>'+opts+'</select>'+
+    '<select id="da" style="flex:1"><option>Banque Pop</option><option>Revolut</option><option>Edenred</option></select></div>'+
+    '<div id="ep-sw" style="display:none"><select id="dep-ep-idx" style="width:100%"></select></div>'+
+    '<input id="dd" style="width:100%" placeholder="Description">'+
+    '<div class="fg"><input id="dm" type="number" step="0.01" min="0" style="flex:1" placeholder="Montant (\u20ac)"><button class="btn" id="btn-add-dep">Ajouter</button></div>'+
+    '<div id="dep-hint" style="font-size:12px;color:#aaa"></div>'+
+    '</div></div>'+
+    '<div class="card"><div class="ct">Virements BP \u2192 Revolut <span style="font-size:11px;font-weight:400;color:#999">(transferts internes)</span></div>'+
+    virRows+
+    '<div style="margin-top:12px;border-top:.5px solid rgba(0,0,0,.08);padding-top:12px;display:flex;gap:8px">'+
+    '<input id="vd" style="flex:2" placeholder="Description"><input id="vm" type="number" step="0.01" min="0" style="flex:1" placeholder="Montant (\u20ac)">'+
+    '<button class="btn" id="btn-add-vir">Ajouter</button></div></div>'+
+    '<div class="card"><div class="ct">Toutes les depenses ('+m.depenses.length+')</div>'+rows+'</div>';
+
+  bindMsel(false);
+
+  var dcEl=document.getElementById('dc');
+  var daEl=document.getElementById('da');
+  var epSw=document.getElementById('ep-sw');
+  var epIdx=document.getElementById('dep-ep-idx');
+  var hint=document.getElementById('dep-hint');
+
+  dcEl.addEventListener('change',function(){
+    var cat=this.value;
+    if(cat==='Epargne'){
+      daEl.value='Banque Pop'; daEl.disabled=true;
+      var o=''; m.epargne.forEach(function(e,i){o+='<option value="'+i+'">'+e.label+'</option>';});
+      epIdx.innerHTML=o; epSw.style.display='block';
+      hint.textContent='Debite de Banque Pop et ajoute a l\'objectif selectionne.';
+    } else if(cat==='Alimentation'||cat==='Restaurant'){
+      daEl.disabled=false; epSw.style.display='none';
+      hint.textContent='Conseil : utilisez Edenred pour '+cat.toLowerCase()+' en priorite.';
+    } else {
+      daEl.disabled=false; epSw.style.display='none'; hint.textContent='';
+    }
+  });
+
+  document.getElementById('btn-add-dep').addEventListener('click',function(){
+    var cat=dcEl.value, desc=document.getElementById('dd').value.trim();
+    var amt=parseFloat(document.getElementById('dm').value), app=daEl.value;
+    if(!cat||!desc||isNaN(amt)||amt<=0) return;
+    if(app==='Edenred'&&cat!=='Alimentation'&&cat!=='Restaurant'){
+      hint.textContent='Edenred uniquement pour Alimentation ou Restaurant.'; return;
+    }
+    var dep={id:G.nid++,cat:cat,desc:desc,amt:amt,app:app};
+    if(cat==='Epargne'){
+      dep.app='Epargne';
+      var idx=parseInt(epIdx.value);
+      dep.epIdx=idx;
+      m.epargne[idx].actuel=+(m.epargne[idx].actuel+amt).toFixed(2);
+    }
+    m.depenses.push(dep);
+    document.getElementById('dd').value=''; document.getElementById('dm').value='';
+    refresh();
+  });
+
+  document.getElementById('btn-add-vir').addEventListener('click',function(){
+    var desc=document.getElementById('vd').value.trim()||'Virement vers Revolut';
+    var amt=parseFloat(document.getElementById('vm').value);
+    if(isNaN(amt)||amt<=0) return;
+    if(!m.virements) m.virements=[];
+    m.virements.push({id:G.nid++,desc:desc,montant:amt,de:'Banque Pop',vers:'Revolut'});
+    refresh();
+  });
+
+  document.querySelectorAll('.del[data-id]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=+this.getAttribute('data-id');
+      var dep=m.depenses.find(function(d){return d.id===id;});
+      if(dep&&dep.cat==='Epargne'&&typeof dep.epIdx==='number'){
+        m.epargne[dep.epIdx].actuel=+(Math.max(0,m.epargne[dep.epIdx].actuel-dep.amt)).toFixed(2);
+      }
+      m.depenses=m.depenses.filter(function(d){return d.id!==id;});
+      refresh();
+    });
+  });
+  document.querySelectorAll('.del[data-vid]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=+this.getAttribute('data-vid');
+      m.virements=m.virements.filter(function(v){return v.id!==id;});
+      refresh();
+    });
+  });
+}
+
+/* ================================================================
+   EDENRED
+================================================================ */
+function rTk(){
+  var m=M();
+  var tc=tkCredit(m), u=tkU(m), l=tkL(m), p=pc(u,tc);
+  var col=p>=90?'#d94040':p>=70?'#e0a800':'#1a9e6e';
+  var hist='';
+  var tkDeps=m.depenses.filter(function(d){return d.app==='Edenred';});
+  if(!tkDeps.length) hist='<div style="color:#bbb;font-size:13px;padding:8px 0">Aucune utilisation ce mois</div>';
+  tkDeps.forEach(function(d){
+    hist+='<div class="row"><span style="flex:1;color:#444">'+d.cat+'</span><span style="flex:2;color:#888;font-size:12px">'+d.desc+'</span><span style="font-weight:600">'+f(d.amt)+'</span><button class="del" data-id="'+d.id+'">&#10005;</button></div>';
+  });
+
+  document.getElementById('tk').innerHTML=
+    moisSelectorHTML(false)+
+    '<div class="card"><div class="ct">Suivi Edenred <span style="font-size:11px;font-weight:400;color:#999">— Alimentation et Restaurant uniquement</span></div>'+
+    '<div class="g3" style="margin-bottom:12px">'+
+    kpi('Credit mensuel',f(tc),'= Prime / Bonus du mois','#d4a020')+
+    kpi('Utilise',f(u),p+'% du credit','#c48a00')+
+    kpi('Restant',f(l),'Disponible ce mois',l>30?'#1a9e6e':l>10?'#c48a00':'#d94040')+
+    '</div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:3px"><span>Progression</span><span>'+p+'%</span></div>'+
+    pbar(p,col)+
+    '<div style="background:#fdf2dc;border-radius:8px;padding:9px 12px;font-size:12px;color:#8a5e00;">'+
+    'Le credit Edenred est lie a votre <b>Prime / Bonus</b>. Modifiez-le dans l\'onglet Budget prevu.</div></div>'+
+    '<div class="card"><div class="ct">Enregistrer une utilisation</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<select id="tkcat" style="width:100%"><option value="Alimentation">Alimentation</option><option value="Restaurant">Restaurant</option></select>'+
+    '<input id="tkd" style="width:100%" placeholder="Description (ex: Dejeuner, Courses)">'+
+    '<div class="fg"><input id="tka" type="number" step="0.01" min="0" style="flex:1" placeholder="Montant (\u20ac)"><button class="btn" id="btn-add-tk">Ajouter</button></div>'+
+    '</div></div>'+
+    '<div class="card"><div class="ct">Historique Edenred</div>'+hist+'</div>';
+
+  bindMsel(false);
+  document.getElementById('btn-add-tk').addEventListener('click',function(){
+    var cat=document.getElementById('tkcat').value;
+    var desc=document.getElementById('tkd').value.trim();
+    var amt=parseFloat(document.getElementById('tka').value);
+    if(!desc||isNaN(amt)||amt<=0) return;
+    if(amt>tkL(m)){alert('Depasse le credit Edenred restant ('+f(tkL(m))+')');return;}
+    m.depenses.push({id:G.nid++,cat:cat,desc:desc,amt:amt,app:'Edenred'});
+    refresh();
+  });
+  document.querySelectorAll('.del[data-id]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=+this.getAttribute('data-id');
+      m.depenses=m.depenses.filter(function(d){return d.id!==id;});
+      refresh();
+    });
+  });
+}
+
+/* ================================================================
+   EPARGNE
+================================================================ */
+function rEp(){
+  var m=M();
+  var tot=m.epargne.reduce(function(a,e){return a+e.actuel;},0);
+  var simVal=Math.round(tot)||95;
+
+  document.getElementById('ep').innerHTML=
+    moisSelectorHTML(false)+
+    '<div class="card"><div class="ct">Objectifs d\'epargne</div>'+
+    '<div style="background:#e8f8f0;border-radius:8px;padding:9px 12px;font-size:12px;color:#1a5f3a;margin-bottom:14px">'+
+    'Pour epargner : ajoutez une depense avec la categorie <b>Epargne</b> dans l\'onglet Depenses.'+
+    '</div><div id="ep-list"></div></div>'+
+    '<div class="card"><div class="ct">Ajouter un objectif</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<input id="ep-label" style="width:100%" placeholder="Nom (ex: Voiture, Voyage)">'+
+    '<div class="fg"><input id="ep-cible" type="number" step="1" min="0" style="flex:1" placeholder="Objectif (\u20ac)"><button class="btn" id="ep-add-btn">Creer</button></div>'+
+    '</div></div>'+
+    '<div class="card"><div class="ct">Simulateur de projection</div>'+
+    '<div class="sl"><label>Epargne mensuelle</label><input type="range" id="sm" min="50" max="600" step="10" value="'+simVal+'"><span class="sv" id="smv">'+simVal+' \u20ac</span></div>'+
+    '<div class="sl"><label>Taux annuel</label><input type="range" id="st" min="0" max="5" step="0.1" value="3"><span class="sv" id="stv">3.0%</span></div>'+
+    '<div class="sgrid">'+
+    '<div class="sc"><div class="sy">1 an</div><div class="sa" id="s1">-</div></div>'+
+    '<div class="sc"><div class="sy">3 ans</div><div class="sa" id="s3">-</div></div>'+
+    '<div class="sc"><div class="sy">5 ans</div><div class="sa" id="s5">-</div></div>'+
+    '<div class="sc"><div class="sy">10 ans</div><div class="sa" id="s10">-</div></div>'+
+    '</div></div>';
+
+  bindMsel(false);
+  renderEpList();
+  document.getElementById('sm').addEventListener('input',uSim);
+  document.getElementById('st').addEventListener('input',uSim);
+  document.getElementById('ep-add-btn').addEventListener('click',function(){
+    var label=document.getElementById('ep-label').value.trim();
+    var cible=parseFloat(document.getElementById('ep-cible').value);
+    if(!label||isNaN(cible)||cible<=0) return;
+    M().epargne.push({label:label,cible:cible,actuel:0});
+    document.getElementById('ep-label').value='';
+    document.getElementById('ep-cible').value='';
+    save(); renderEpList();
+  });
+  setTimeout(uSim,0);
+}
+
+function renderEpList(){
+  var m=M(); var tot=0,totC=0,html='';
+  m.epargne.forEach(function(obj,i){
+    var p=pc(obj.actuel,obj.cible);
+    var col=p>=100?'#1a9e6e':p>=50?'#4a80d4':'#e0a800';
+    var bg=p>=100?'#e8f8f0':p>=50?'#deeefb':'#fdf2dc';
+    var co=p>=100?'#1a7a4a':p>=50?'#1a5f8a':'#8a5e00';
+    tot+=obj.actuel; totC+=obj.cible;
+    html+='<div style="margin-bottom:16px">'+
+      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">'+
+      '<span style="font-weight:500">'+obj.label+'</span>'+
+      '<span style="color:#999">'+f(obj.actuel)+' / '+f(obj.cible)+'</span></div>'+
+      pbar(p,col)+
+      '<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px">'+
+      '<span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:6px;background:'+bg+';color:'+co+'">'+p+'%</span>'+
+      '<div style="display:flex;align-items:center;gap:4px">'+
+      '<label style="font-size:11px;color:#999">Cible</label>'+
+      '<input type="number" class="ep-cible-inp" data-i="'+i+'" step="1" min="0" value="'+obj.cible+'" style="width:90px;padding:4px 8px;font-size:12px;border-radius:6px;border:.5px solid rgba(0,0,0,.15)">'+
+      '<button class="bsm ep-cible-btn" data-i="'+i+'">OK</button>'+
+      '</div>'+
+      '<button class="del ep-del-btn" data-i="'+i+'">&#10005;</button>'+
+      '</div></div>';
+  });
+  html+='<div style="border-top:.5px solid rgba(0,0,0,.08);padding-top:10px;display:flex;justify-content:space-between;font-size:13px;font-weight:600"><span>Total</span><span style="color:#1a9e6e">'+f(tot)+' / '+f(totC)+'</span></div>';
+  var el=document.getElementById('ep-list');
+  if(!el) return;
+  el.innerHTML=html;
+  el.querySelectorAll('.ep-cible-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=+this.getAttribute('data-i');
+      var v=parseFloat(el.querySelector('.ep-cible-inp[data-i="'+i+'"]').value);
+      if(isNaN(v)||v<=0) return;
+      M().epargne[i].cible=v; save(); renderEpList();
+    });
+  });
+  el.querySelectorAll('.ep-del-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=+this.getAttribute('data-i');
+      if(!confirm('Supprimer "'+M().epargne[i].label+'" ?')) return;
+      M().depenses=M().depenses.filter(function(d){return !(d.cat==='Epargne'&&d.epIdx===i);});
+      M().epargne.splice(i,1);
+      save(); renderEpList();
+    });
+  });
+}
+
+function uSim(){
+  var mEl=document.getElementById('sm'),tEl=document.getElementById('st');
+  if(!mEl) return;
+  var mv=+mEl.value, tv=+tEl.value;
+  document.getElementById('smv').textContent=mv+' \u20ac';
+  document.getElementById('stv').textContent=tv.toFixed(1)+'%';
+  function fv(mo){var r=tv/100/12; return r===0?mv*mo:mv*((Math.pow(1+r,mo)-1)/r);}
+  [[12,'s1'],[36,'s3'],[60,'s5'],[120,'s10']].forEach(function(pair){
+    var el=document.getElementById(pair[1]);
+    if(el) el.textContent=Math.round(fv(pair[0])).toLocaleString('fr-FR')+' \u20ac';
+  });
+}
+
+/* ================================================================
+   BUDGET PREVU
+================================================================ */
+function rBud(){
+  var m=M();
+  var rrBP=revRBP(m), rpBP=revPBP(m);
+  var dr=depR(m), dp=depP(m);
+  var epR=epTotal(m), epBudget=m.budgetEpargne||0;
+  var sr=soldeReel(m), sp=soldePrevu(m);
+  var tc=tkCredit(m);
+
+  var revRows='';
+  m.revenus.forEach(function(r,i){
+    var isPrime=r.label==='Prime / Bonus';
+    revRows+='<div class="row">'+
+      '<span style="flex:1;font-size:13px;color:'+(isPrime?'#8a5e00':'#444')+'">'+(isPrime?'Prime / Bonus <span style="font-size:10px;color:#aaa">(= credit Edenred)</span>':r.label)+'</span>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-size:10px;color:#bbb">Prevu</span><input class="biw rev-prev" data-i="'+i+'" type="number" value="'+r.prevu+'" step="1"></div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px"><span style="font-size:10px;color:#bbb">Reel</span><input class="biw rev-reel" data-i="'+i+'" type="number" value="'+r.reel+'" step="1"></div>'+
+      ecart(r.reel,r.prevu,false)+'</div>';
+  });
+
+  var depRows='';
+  CATS.forEach(function(cat){
+    var isAlimResto=(cat==='Alimentation'||cat==='Restaurant');
+    var real=catRAll(m,cat), bud=m.budgets[cat]||0;
+    var edenredPart=isAlimResto?sumIf(m.depenses,function(d){return d.cat===cat&&d.app==='Edenred';}):0;
+    var hint=edenredPart>0?' <span style="font-size:10px;color:#8a5e00">(dont '+f(edenredPart)+' Edenred)</span>':'';
+    depRows+='<div class="row">'+
+      '<span style="flex:1;font-size:13px;color:#444">'+cat+hint+'</span>'+
+      '<span style="font-size:12px;color:#999;min-width:85px;text-align:right">Reel : '+f(real)+'</span>'+
+      '<input class="biw bud-inp" data-cat="'+cat+'" type="number" value="'+bud+'" step="1">'+
+      ecart(real,bud,true)+'</div>';
+  });
+  // ligne epargne
+  depRows+='<div class="row" style="background:#f8fcf9;border-radius:8px;padding:8px 10px">'+
+    '<span style="flex:1;font-size:13px;color:#1a7a4a;font-weight:500">Epargne</span>'+
+    '<span style="font-size:12px;color:#999;min-width:85px;text-align:right">Reel : '+f(epR)+'</span>'+
+    '<input class="biw" id="bud-ep-inp" type="number" value="'+epBudget+'" step="1">'+
+    ecart(epR,epBudget,false)+'</div>';
+  // ligne edenred (informatif)
+  depRows+='<div class="row" style="background:#fffbf0;border-radius:8px;padding:8px 10px">'+
+    '<span style="flex:1;font-size:13px;color:#8a5e00;font-weight:500">Edenred (Prime/Bonus)</span>'+
+    '<span style="font-size:12px;color:#999;min-width:85px;text-align:right">Utilise : '+f(tkU(m))+'</span>'+
+    '<span style="font-size:12px;min-width:85px;text-align:right;color:#aaa">Credit : '+f(tc)+'</span>'+
+    '<span style="font-size:12px;min-width:72px;text-align:right;color:'+(tkU(m)<=tc?'#1a9e6e':'#d94040')+'">'+f(tkU(m)-tc)+'</span></div>';
+
+  document.getElementById('bud').innerHTML=
+    moisSelectorHTML(false)+
+    '<div class="card"><div class="ct">Revenus</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:6px;font-size:11px;color:#bbb;padding-bottom:6px;border-bottom:.5px solid rgba(0,0,0,.06);margin-bottom:2px">'+
+    '<span style="min-width:85px;text-align:right">Prevu</span><span style="min-width:85px;text-align:right">Reel</span><span style="min-width:72px;text-align:right">Ecart</span></div>'+
+    revRows+
+    '<div style="display:flex;justify-content:space-between;border-top:.5px solid rgba(0,0,0,.09);margin-top:8px;padding-top:10px;font-size:13px;font-weight:600">'+
+    '<span>Total revenus BP</span>'+
+    '<div style="display:flex;gap:14px">'+
+    '<span style="color:#999;font-weight:400">Prevu : '+f(rpBP)+'</span>'+
+    '<span>Reel : '+f(rrBP)+'</span>'+
+    '<span style="color:'+(rrBP>=rpBP?'#1a9e6e':'#d94040')+'">'+(rrBP>=rpBP?'+':'')+f(rrBP-rpBP)+'</span>'+
+    '</div></div>'+
+    '<div style="margin-top:6px;font-size:12px;color:#aaa">Prime / Bonus = credit Edenred ('+f(tc)+'), ne transite pas par Banque Pop.</div>'+
+    '</div>'+
+    '<div class="card"><div class="ct">Depenses prevues vs reelles</div>'+
+    '<div style="display:flex;justify-content:flex-end;gap:6px;font-size:11px;color:#bbb;padding-bottom:6px;border-bottom:.5px solid rgba(0,0,0,.06);margin-bottom:2px">'+
+    '<span style="min-width:85px;text-align:right">Reel</span><span style="min-width:85px;text-align:right">Budget</span><span style="min-width:72px;text-align:right">Ecart</span></div>'+
+    depRows+
+    '<div style="display:flex;justify-content:space-between;border-top:.5px solid rgba(0,0,0,.09);margin-top:8px;padding-top:10px;font-size:13px;font-weight:600">'+
+    '<span>Total</span>'+
+    '<div style="display:flex;gap:14px">'+
+    '<span style="color:#999;font-weight:400">Reel : '+f(dr)+'</span>'+
+    '<span>Prevu : '+f(dp)+'</span>'+
+    '<span style="color:'+(dr<=dp?'#1a9e6e':'#d94040')+'">'+(dr>=dp?'+':'')+f(dr-dp)+'</span>'+
+    '</div></div></div>'+
+    '<div class="g2">'+
+    kpi('Solde prevu',f(sp),'Revenus BP prevu - Depenses prevues',sp>=0?'#1a9e6e':'#d94040')+
+    kpi('Solde reel',f(sr),'Revenus BP reels - Depenses reelles',sr>=0?'#1a9e6e':'#d94040')+
+    '</div>';
+
+  bindMsel(false);
+  document.querySelectorAll('.rev-prev').forEach(function(inp){
+    inp.addEventListener('change',function(){M().revenus[+this.getAttribute('data-i')].prevu=+this.value;save();});
+  });
+  document.querySelectorAll('.rev-reel').forEach(function(inp){
+    inp.addEventListener('change',function(){M().revenus[+this.getAttribute('data-i')].reel=+this.value;refresh();});
+  });
+  document.querySelectorAll('.bud-inp').forEach(function(inp){
+    inp.addEventListener('change',function(){M().budgets[this.getAttribute('data-cat')]=+this.value;save();});
+  });
+  var epInp=document.getElementById('bud-ep-inp');
+  if(epInp) epInp.addEventListener('change',function(){M().budgetEpargne=+this.value;save();});
+}
+
+/* ================================================================
+   HISTORIQUE
+================================================================ */
+function rHist(){
+  var keys=Object.keys(G.mois).sort();
+  var thead='<tr><th>Mois</th><th style="text-align:right">Rev. BP</th><th style="text-align:right">Depenses</th><th style="text-align:right">Edenred</th><th style="text-align:right">Epargne</th><th style="text-align:right">Solde BP</th><th style="text-align:right">Solde RV</th></tr>';
+  var tbody='';
+  keys.forEach(function(k){
+    var md=G.mois[k];
+    var rrBP=revRBP(md),dr=depR(md),ep=epTotal(md),tk=tkU(md),sbp=soldeBP(md),srv=soldeRV(md);
+    tbody+='<tr>'+
+      '<td style="font-weight:500">'+moisLabelCourt(md.annee,md.mois)+(md.cloture?' <span style="font-size:10px;color:#aaa">(cloture)</span>':'')+'</td>'+
+      '<td style="text-align:right;color:#1a9e6e">'+f(rrBP)+'</td>'+
+      '<td style="text-align:right;color:#c48a00">'+f(dr)+'</td>'+
+      '<td style="text-align:right;color:#d4a020">'+f(tk)+'</td>'+
+      '<td style="text-align:right;color:#1a9e6e">'+f(ep)+'</td>'+
+      '<td style="text-align:right;color:'+(sbp>=0?'#1a9e6e':'#d94040')+'">'+f(sbp)+'</td>'+
+      '<td style="text-align:right;color:'+(srv>=0?'#1a9e6e':'#d94040')+'">'+f(srv)+'</td>'+
+      '</tr>';
+  });
+  var m=M();
+  var rapport='';
+  var epR=epTotal(m),epBudget=m.budgetEpargne||0;
+  rapport+='<div class="rap-section '+(epR>=epBudget&&epBudget>0?'rap-ok':epR>0?'rap-warn':'rap-bad')+'"><b>Epargne</b> : '+f(epR)+' / '+f(epBudget)+' prevu</div>';
+  CATS.forEach(function(c){
+    var r=catRAll(m,c),b=m.budgets[c]||0; if(!b) return;
+    var p=Math.round(r/b*100);
+    rapport+='<div class="rap-section '+(p>=100?'rap-bad':p>=85?'rap-warn':'rap-ok')+'"><b>'+c+'</b> : '+f(r)+' / '+f(b)+' prevu ('+p+'%)</div>';
+  });
+  var compHtml='';
+  if(keys.length>=2){
+    var pk=keys[keys.length-2], prev=G.mois[pk];
+    var dRev=revRBP(m)-revRBP(prev), dDep=depR(m)-depR(prev);
+    compHtml='<div class="card"><div class="ct">Comparaison vs '+moisLabelCourt(prev.annee,prev.mois)+'</div>'+
+      '<div class="g2">'+
+      kpi('Revenus BP',f(revRBP(m)),(dRev>=0?'+':'')+f(dRev)+' vs mois precedent',dRev>=0?'#1a9e6e':'#d94040')+
+      kpi('Depenses',f(depR(m)),(dDep<=0?'':'')+f(dDep)+' vs mois precedent',dDep<=0?'#1a9e6e':'#d94040')+
+      '</div></div>';
+  }
+  document.getElementById('hist').innerHTML=
+    moisSelectorHTML(true)+
+    '<div class="card"><div class="ct">Recapitulatif mensuel</div><div style="overflow-x:auto"><table class="htable"><thead>'+thead+'</thead><tbody>'+tbody+'</tbody></table></div></div>'+
+    compHtml+
+    '<div class="card"><div class="ct">Rapport '+moisLabelCourt(m.annee,m.mois)+'</div>'+rapport+'</div>';
+  bindMsel(true);
+}
+
+/* ================================================================
+   ALERTES
+================================================================ */
+function rAl(){
+  var seuil=G.alerteJours||7;
+  var totP=G.prelevements.reduce(function(a,p){return a+p.montant;},0);
+  var imm=G.prelevements.filter(function(p){return djUntil(p.jour)<=seuil;});
+  var ap=imm.length?imm.map(function(p){var d=djUntil(p.jour);return abox(d<=2?'d':'w',p.label+' dans '+d+'j \u2014 '+f(p.montant)+' ('+p.app+')');}).join(''):abox('ok','Aucun prelevement dans les '+seuil+' prochains jours.');
+  var rows='';
+  if(!G.prelevements.length) rows='<div style="color:#bbb;font-size:13px;padding:8px 0">Aucun prelevement</div>';
+  G.prelevements.forEach(function(p){
+    var d=djUntil(p.jour);
+    var dc=d<=2?'#d94040':d<=seuil?'#e0a800':'#1a9e6e';
+    var db=d<=2?'#fde8e8':d<=seuil?'#fdf2dc':'#e8f8f0';
+    rows+='<div class="row"><span style="flex:1;color:#444">'+p.label+'</span>'+tag(p.app)+
+      '<span style="font-size:12px;color:#999">le '+p.jour+'</span>'+
+      '<span style="font-size:11px;font-weight:500;padding:2px 7px;border-radius:5px;background:'+db+';color:'+dc+'">'+d+'j</span>'+
+      '<span style="font-weight:600;min-width:65px;text-align:right">'+f(p.montant)+'</span>'+
+      '<button class="del" data-pid="'+p.id+'">&#10005;</button></div>';
+  });
+  document.getElementById('al').innerHTML=
+    '<div class="card"><div class="ct">Alertes imminentes</div>'+ap+'</div>'+
+    '<div class="card"><div class="ct">Prelevements recurrents \u2014 total : '+f(totP)+'/mois</div>'+rows+
+    '<div style="margin-top:14px;border-top:.5px solid rgba(0,0,0,.08);padding-top:14px">'+
+    '<div style="font-size:12px;font-weight:600;color:#999;margin-bottom:10px">Ajouter un prelevement</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    '<div class="fg"><input id="pl" style="flex:2" placeholder="Nom (ex: Netflix)"><select id="pa" style="flex:1"><option>Banque Pop</option><option>Revolut</option></select></div>'+
+    '<div class="fg"><input id="pm" type="number" step="0.01" min="0" style="flex:1" placeholder="Montant (\u20ac)"><input id="pj" type="number" min="1" max="31" style="flex:1" placeholder="Jour du mois"><button class="btn" id="btn-add-prel">Ajouter</button></div>'+
+    '</div></div></div>'+
+    '<div class="card"><div class="ct">Seuil d\'alerte</div>'+
+    '<div class="sl"><label>Alerter si dans moins de</label><input type="range" id="seuil-r" min="1" max="14" step="1" value="'+seuil+'"><span class="sv" id="sv">'+seuil+' jours</span></div></div>';
+
+  document.getElementById('seuil-r').addEventListener('input',function(){G.alerteJours=+this.value;document.getElementById('sv').textContent=this.value+' jours';save();});
+  document.getElementById('btn-add-prel').addEventListener('click',function(){
+    var l=document.getElementById('pl').value.trim();
+    var mt=parseFloat(document.getElementById('pm').value);
+    var j=parseInt(document.getElementById('pj').value);
+    var a=document.getElementById('pa').value;
+    if(!l||isNaN(mt)||mt<=0||isNaN(j)||j<1||j>31) return;
+    G.prelevements.push({id:G.nid++,label:l,montant:mt,jour:j,app:a});
+    refresh();
+  });
+  document.querySelectorAll('.del[data-pid]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      G.prelevements=G.prelevements.filter(function(x){return x.id!==+this.getAttribute('data-pid');},this);
+      refresh();
+    });
+  });
+}
+
+/* ================================================================
+   EXPORT / IMPORT
+================================================================ */
+function exportData(){
+  var json=JSON.stringify(G,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='budget_'+G.curAnnee+'_'+G.curMois+'.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(){
+  var input=document.createElement('input');
+  input.type='file';
+  input.accept='.json';
+  input.addEventListener('change',function(){
+    var file=this.files[0];
+    if(!file) return;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{
+        var data=JSON.parse(e.target.result);
+        if(!data.mois) throw new Error('Fichier invalide');
+        G=data;
+        save();
+        refresh();
+        alert('Donnees importees avec succes !');
+      } catch(err){
+        alert('Erreur : fichier invalide ou corrompu.');
+      }
+    };
+    reader.readAsText(file);
+  });
+  input.click();
+}
+
+/* ================================================================
+   BARRE EXPORT/IMPORT
+================================================================ */
+(function(){
+  var bar=document.createElement('div');
+  bar.style.cssText='display:flex;justify-content:flex-end;gap:8px;max-width:860px;margin:0 auto 10px;padding:0 16px;';
+  bar.innerHTML=
+    '<button onclick="exportData()" style="padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer;border:.5px solid rgba(0,0,0,.15);background:#fff;color:#444;display:flex;align-items:center;gap:5px">'+
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'+
+    'Exporter</button>'+
+    '<button onclick="importData()" style="padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer;border:.5px solid rgba(0,0,0,.15);background:#fff;color:#444;display:flex;align-items:center;gap:5px">'+
+    '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 14 12 9 17 14"/><line x1="12" y1="9" x2="12" y2="21"/></svg>'+
+    'Importer</button>';
+  document.getElementById('app').insertBefore(bar,document.getElementById('app').firstChild);
+})();
+
+/* ================================================================
+   INIT
+================================================================ */
+rDash();
+</script>
+</body>
+</html>
